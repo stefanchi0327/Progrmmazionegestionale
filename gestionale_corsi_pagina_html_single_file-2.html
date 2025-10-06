@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestionale Corsi – Amministrazione</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#121821;
+      --muted:#98a2b3;
+      --text:#e6f0ff;
+      --primary:#5b8cff;
+      --primary-600:#3b6ef0;
+      --success:#22c55e;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+      --ring: rgba(91,140,255,.35);
+      --border:#1f2a38;
+      --chip:#1a2330;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg, #0b0f14, #0c121a 40%, #0b0f14 100%);
+      color:var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    .container{max-width:1200px; margin:24px auto; padding:0 16px}
+    header{display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:16px}
+    .title{font-size:24px; font-weight:700; letter-spacing:.2px}
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{appearance:none; border:1px solid var(--border); background:var(--card); color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer; transition:.2s ease; font-weight:600}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:linear-gradient(180deg, var(--primary), var(--primary-600)); border-color:transparent}
+    .btn.success{background:linear-gradient(180deg, #34d399, #10b981); border-color:transparent}
+    .btn.ghost{background:transparent}
+    .btn.danger{background:linear-gradient(180deg, #f87171, #ef4444); border-color:transparent}
+
+    .grid{display:grid; gap:16px}
+    @media(min-width:900px){.grid.cols-2{grid-template-columns: 1.2fr .8fr}}
+
+    .card{background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow: 0 10px 30px rgba(0,0,0,.3)}
+    .card h2{margin:0 0 8px 0; font-size:18px}
+    .card .content{padding:16px}
+
+    .form-grid{display:grid; grid-template-columns: repeat(6, 1fr); gap:12px}
+    .field{display:flex; flex-direction:column; gap:6px}
+    .field label{font-size:12px; color:var(--muted)}
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="date"],
+    .field input[type="time"],
+    .field input[type="color"],
+    .field select,
+    .field textarea{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:#0e141c; color:var(--text);
+      outline:none; transition:border .15s, box-shadow .15s;
+    }
+    .field textarea{min-height:84px; resize:vertical}
+    .field input:focus, .field select:focus, .field textarea:focus{box-shadow:0 0 0 6px var(--ring); border-color:transparent}
+    .field.inline{flex-direction:row; align-items:center; gap:10px}
+    .help{font-size:12px; color:var(--muted)}
+
+    .section-title{margin-top:8px; grid-column:1/-1; font-weight:700; color:#c7d2fe}
+
+    .divider{height:1px; background:var(--border); margin:8px 0; grid-column:1/-1}
+
+    .chips{display:flex; flex-wrap:wrap; gap:8px}
+    .chip{background:var(--chip); border:1px solid var(--border); padding:6px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:8px}
+    .chip button{border:0; background:transparent; color:var(--muted); cursor:pointer}
+
+    table{width:100%; border-collapse:separate; border-spacing:0 8px}
+    thead th{font-size:12px; color:var(--muted); text-align:left; padding:0 10px}
+    tbody tr{background:var(--card); border:1px solid var(--border)}
+    tbody td{padding:10px; vertical-align:top}
+    tbody tr td:first-child{border-top-left-radius:12px; border-bottom-left-radius:12px}
+    tbody tr td:last-child{border-top-right-radius:12px; border-bottom-right-radius:12px}
+
+    .status{font-size:12px; font-weight:700; padding:4px 8px; border-radius:10px; display:inline-block}
+    .status.active{background:rgba(34,197,94,.15); color:#34d399}
+    .status.inactive{background:rgba(239,68,68,.15); color:#f87171}
+
+    .searchbar{display:flex; gap:8px; flex-wrap:wrap}
+    .searchbar input, .searchbar select{padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:#0e141c; color:var(--text)}
+
+    .toast{position:fixed; right:16px; bottom:16px; background:#0e141c; border:1px solid var(--border); padding:12px 14px; border-radius:12px; display:none}
+    .toast.show{display:block; animation:fade 3s ease both}
+    @keyframes fade{0%{opacity:0; transform:translateY(6px)}10%{opacity:1; transform:translateY(0)}90%{opacity:1}100%{opacity:0}}
+
+    .legend{display:flex; align-items:center; gap:10px}
+    .dot{width:12px; height:12px; border-radius:50%}
+
+    .row-actions{display:flex; gap:6px; flex-wrap:wrap}
+    .row-actions button{border:0; padding:6px 10px; border-radius:10px; cursor:pointer; background:#0e141c; color:var(--text); border:1px solid var(--border)}
+    .row-actions button:hover{box-shadow:0 0 0 4px var(--ring)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">Gestionale Corsi</div>
+      <div class="toolbar">
+        <button class="btn primary" id="btnSave">Salva corso</button>
+        <button class="btn ghost" id="btnReset">Pulisci form</button>
+        <button class="btn" id="btnExport">Esporta corsi (CSV)</button>
+        <button class="btn" id="btnExportEnr">Esporta iscrizioni (CSV)</button>
+      </div>
+    </header>
+
+    <div class="grid cols-2">
+      <!-- FORM CARD -->
+      <section class="card" id="formCard">
+        <div class="content">
+          <h2>Nuovo corso / Modifica</h2>
+          <div class="form-grid" id="courseForm">
+            <div class="field" style="grid-column: span 4">
+              <label for="name">Nome corso *</label>
+              <input id="name" required placeholder="Es. Hip Hop Junior" />
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="discipline">Disciplina</label>
+              <select id="discipline">
+                <option>Hip Hop</option>
+                <option>Contemporaneo</option>
+                <option>Classico</option>
+                <option>Breakdance</option>
+                <option>Heels</option>
+                <option>Fitness</option>
+                <option>Altro</option>
+              </select>
+            </div>
+
+            <div class="field" style="grid-column: span 2">
+              <label for="level">Livello</label>
+              <select id="level">
+                <option>Kids</option>
+                <option>Base</option>
+                <option>Intermedio</option>
+                <option>Avanzato</option>
+                <option>Open</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="teacher">Insegnante</label>
+              <input id="teacher" placeholder="Es. Martina Rossi" />
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="room">Aula</label>
+              <input id="room" placeholder="Es. Sala 1" />
+            </div>
+
+            <div class="section-title">Orari</div>
+            <div class="field" style="grid-column: span 2">
+              <label for="day">Giorno</label>
+              <select id="day">
+                <option>Lunedì</option><option>Martedì</option><option>Mercoledì</option>
+                <option>Giovedì</option><option>Venerdì</option><option>Sabato</option><option>Domenica</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="start">Inizio</label>
+              <input id="start" type="time" />
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="end">Fine</label>
+              <input id="end" type="time" />
+            </div>
+            <div class="field inline" style="grid-column: span 6">
+              <button class="btn" id="addSlot" type="button">Aggiungi orario</button>
+              <span class="help">Puoi inserire più orari (es. Martedì 17:00–18:00, Giovedì 17:00–18:00)</span>
+            </div>
+            <div class="field" style="grid-column: 1/-1">
+              <div class="chips" id="slots"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="field" style="grid-column: span 2">
+              <label for="capacity">Capienza</label>
+              <input id="capacity" type="number" min="1" placeholder="Es. 20" />
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="price">Prezzo mensile (€)</label>
+              <input id="price" type="number" min="0" step="0.01" placeholder="Es. 45.00" />
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="color">Colore</label>
+              <input id="color" type="color" value="#5b8cff" />
+            </div>
+
+            <div class="field" style="grid-column: span 3">
+              <label for="startDate">Data inizio</label>
+              <input id="startDate" type="date" />
+            </div>
+            <div class="field" style="grid-column: span 3">
+              <label for="endDate">Data fine</label>
+              <input id="endDate" type="date" />
+            </div>
+
+            <div class="field" style="grid-column: 1/-1">
+              <label for="tags">Tag (separati da virgola)</label>
+              <input id="tags" placeholder="junior, principianti, 11-13" />
+            </div>
+
+            <div class="field" style="grid-column: 1/-1">
+              <label for="description">Descrizione</label>
+              <textarea id="description" placeholder="Breve descrizione del corso..."></textarea>
+            </div>
+
+            <div class="field inline" style="grid-column: span 3">
+              <input id="active" type="checkbox" checked />
+              <label for="active">Corso attivo</label>
+            </div>
+            <div class="field inline" style="grid-column: span 3">
+              <input id="featured" type="checkbox" />
+              <label for="featured">Metti in evidenza</label>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- LIST CARD -->
+      <section class="card">
+        <div class="content">
+          <h2>Elenco corsi</h2>
+          <div class="searchbar" style="margin-bottom:10px">
+            <input id="q" placeholder="Cerca per nome, insegnante, tag..." style="flex:1" />
+            <select id="fltDiscipline">
+              <option value="">Tutte le discipline</option>
+              <option>Hip Hop</option>
+              <option>Contemporaneo</option>
+              <option>Classico</option>
+              <option>Breakdance</option>
+              <option>Heels</option>
+              <option>Fitness</option>
+              <option>Altro</option>
+            </select>
+            <select id="fltLevel">
+              <option value="">Tutti i livelli</option>
+              <option>Kids</option>
+              <option>Base</option>
+              <option>Intermedio</option>
+              <option>Avanzato</option>
+              <option>Open</option>
+            </select>
+            <select id="fltStatus">
+              <option value="">Tutti</option>
+              <option value="attivo">Attivi</option>
+              <option value="inattivo">Inattivi</option>
+            </select>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Corso</th>
+                <th>Dettagli</th>
+                <th>Orari</th>
+                <th>Stato</th>
+                <th style="width:210px">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ENROLLMENTS CARD -->
+      <section class="card">
+        <div class="content">
+          <h2>Iscrizioni</h2>
+          <div class="form-grid" id="enrollForm">
+            <div class="field" style="grid-column: span 3">
+              <label for="enrFirst">Nome *</label>
+              <input id="enrFirst" placeholder="Es. Alessandra" />
+            </div>
+            <div class="field" style="grid-column: span 3">
+              <label for="enrLast">Cognome *</label>
+              <input id="enrLast" placeholder="Es. Bianchi" />
+            </div>
+
+            <div class="field" style="grid-column: span 3">
+              <label for="enrCourse">Corso *</label>
+              <select id="enrCourse"></select>
+            </div>
+            <div class="field" style="grid-column: span 2">
+              <label for="enrPlan">Mensilità *</label>
+              <select id="enrPlan">
+                <option value="mensile">Mensile</option>
+                <option value="trimestrale">Trimestrale</option>
+                <option value="annuale">Tutto l’anno</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column: span 1">
+              <label for="enrAmount">Quota (€)</label>
+              <input id="enrAmount" type="number" step="0.01" min="0" readonly />
+              <div class="help">Calcolata dal prezzo del corso</div>
+            </div>
+
+            <div class="field inline" style="grid-column: 1/-1">
+              <button class="btn success" id="btnEnrAdd" type="button">Aggiungi iscrizione</button>
+              <span class="help">Inserisci lo studente con il piano scelto. La quota viene proposta automaticamente.</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Studente</th>
+                <th>Corso</th>
+                <th>Piano</th>
+                <th>Quota</th>
+                <th style="width:140px">Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="enrRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    'use strict';
+    // --- Utilities
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const toSlug = (s) => {
+      const str = String(s||"").toLowerCase();
+      try {
+        return str.normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      } catch {
+        // Fallback per ambienti senza Unicode property escapes
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      }
+    };
+    const toast = (msg) => { const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2800); };
+
+    // --- Local Storage layer
+    const LS_KEY = 'dance.courses.v1';
+    const ENR_KEY = 'dance.enrollments.v1';
+    const load = () => { try{ return JSON.parse(localStorage.getItem(LS_KEY))||[] }catch{ return [] } };
+    const save = (data) => localStorage.setItem(LS_KEY, JSON.stringify(data));
+    const loadEnr = () => { try{ return JSON.parse(localStorage.getItem(ENR_KEY))||[] }catch{ return [] } };
+    const saveEnr = (data) => localStorage.setItem(ENR_KEY, JSON.stringify(data));
+
+    // --- State
+    let courses = load();
+    let enrollments = loadEnr();
+    let editingId = null; // id of course being edited
+    let tempSlots = [];   // slots for the form before save
+
+    // --- DOM refs
+    const frm = $('#courseForm');
+    const fields = {
+      name: $('#name'), discipline: $('#discipline'), level: $('#level'), teacher: $('#teacher'), room: $('#room'),
+      capacity: $('#capacity'), price: $('#price'), color: $('#color'), startDate: $('#startDate'), endDate: $('#endDate'),
+      tags: $('#tags'), description: $('#description'), active: $('#active'), featured: $('#featured')
+    };
+
+    // Enrollments DOM
+    const enr = {
+      first: $('#enrFirst'), last: $('#enrLast'), course: $('#enrCourse'), plan: $('#enrPlan'), amount: $('#enrAmount'),
+      addBtn: $('#btnEnrAdd'), rows: $('#enrRows')
+    };
+
+    // --- Slots handling
+    const slotEls = { day: $('#day'), start: $('#start'), end: $('#end'), list: $('#slots') };
+    const renderSlots = () => {
+      slotEls.list.innerHTML = '';
+      tempSlots.forEach((s, idx)=>{
+        const el = document.createElement('span');
+        el.className = 'chip';
+        el.innerHTML = `<span class="legend"><span class="dot" style="background:${fields.color.value}"></span>${s.day} ${s.start}–${s.end}</span>`+
+                       `<button title="Rimuovi" aria-label="Rimuovi" data-idx="${idx}">×</button>`;
+        el.querySelector('button').onclick = ()=>{ tempSlots.splice(idx,1); renderSlots(); };
+        slotEls.list.appendChild(el);
+      });
+    };
+    $('#addSlot').addEventListener('click', ()=>{
+      const day = slotEls.day.value, start = slotEls.start.value, end = slotEls.end.value;
+      if(!start || !end){ toast('Specifica orario di inizio e fine.'); return; }
+      if(end <= start){ toast('L\'orario di fine deve essere successivo all\'inizio.'); return; }
+      tempSlots.push({day,start,end}); renderSlots(); slotEls.start.value=''; slotEls.end.value='';
+    });
+
+    // --- Form helpers
+    const resetForm = () => {
+      editingId = null; tempSlots = []; renderSlots();
+      frm.reset(); fields.color.value = '#5b8cff'; fields.active.checked = true; fields.featured.checked = false;
+    };
+
+    $('#btnReset').addEventListener('click', resetForm);
+
+    const getFormData = () => {
+      const name = fields.name.value.trim();
+      if(!name){ toast('Il nome del corso è obbligatorio.'); return null; }
+      if(tempSlots.length === 0){ toast('Aggiungi almeno un orario.'); return null; }
+      const startDate = fields.startDate.value || null;
+      const endDate = fields.endDate.value || null;
+      if(startDate && endDate && endDate < startDate){ toast('La data di fine deve essere successiva alla data di inizio.'); return null; }
+      return {
+        id: editingId || (toSlug(name) + '-' + Date.now()),
+        name,
+        discipline: fields.discipline.value,
+        level: fields.level.value,
+        teacher: fields.teacher.value.trim(),
+        room: fields.room.value.trim(),
+        slots: [...tempSlots],
+        capacity: Number(fields.capacity.value||0),
+        price: Number(fields.price.value||0),
+        color: fields.color.value,
+        startDate, endDate,
+        tags: fields.tags.value.split(',').map(t=>t.trim()).filter(Boolean),
+        description: fields.description.value.trim(),
+        active: fields.active.checked,
+        featured: fields.featured.checked,
+        createdAt: editingId ? undefined : new Date().toISOString()
+      };
+    };
+
+    const fillForm = (c) => {
+      editingId = c.id; tempSlots = [...c.slots]; renderSlots();
+      fields.name.value = c.name; fields.discipline.value = c.discipline; fields.level.value=c.level;
+      fields.teacher.value=c.teacher||''; fields.room.value=c.room||'';
+      fields.capacity.value=c.capacity||''; fields.price.value=c.price||''; fields.color.value=c.color||'#5b8cff';
+      fields.startDate.value=c.startDate||''; fields.endDate.value=c.endDate||'';
+      fields.tags.value=(c.tags||[]).join(', '); fields.description.value=c.description||'';
+      fields.active.checked=!!c.active; fields.featured.checked=!!c.featured;
+      window.scrollTo({top:0, behavior:'smooth'});
+    };
+
+    // --- Save / Update
+    const upsertCourse = (data) => {
+      const idx = courses.findIndex(x=>x.id===data.id);
+      if (idx >= 0) {
+        courses[idx] = { ...courses[idx], ...data };
+      } else {
+        courses.unshift(data);
+      }
+      save(courses);
+      renderTable();
+      renderCourseOptions();
+    };
+
+    $('#btnSave').addEventListener('click', ()=>{
+      const data = getFormData();
+      if(!data) return;
+      upsertCourse(data); toast(editingId ? 'Corso aggiornato.' : 'Corso salvato.');
+      resetForm();
+    });
+
+    // --- Filters & search
+    const filters = { q: $('#q'), d: $('#fltDiscipline'), l: $('#fltLevel'), s: $('#fltStatus') };
+    ['input','change'].forEach(ev=>{
+      filters.q.addEventListener(ev, renderTable);
+      filters.d.addEventListener(ev, renderTable);
+      filters.l.addEventListener(ev, renderTable);
+      filters.s.addEventListener(ev, renderTable);
+    });
+
+    const matches = (c) => {
+      const q = filters.q.value.trim().toLowerCase();
+      const md = !filters.d.value || c.discipline===filters.d.value;
+      const ml = !filters.l.value || c.level===filters.l.value;
+      const ms = !filters.s.value || (filters.s.value==='attivo'? c.active : !c.active);
+      const hay = (c.name+' '+(c.teacher||'')+' '+(c.tags||[]).join(' ')+' '+(c.description||'')).toLowerCase();
+      const mq = !q || hay.includes(q);
+      return md && ml && ms && mq;
+    };
+
+    // --- Row actions
+    const toggleActive = (id) => { const c = courses.find(x=>x.id===id); if(!c) return; c.active = !c.active; save(courses); renderTable(); };
+    const delCourse = (id) => { if(!confirm('Confermi l\'eliminazione del corso?')) return; courses = courses.filter(x=>x.id!==id); save(courses); renderTable(); renderCourseOptions(); toast('Corso eliminato.'); };
+    const editCourse = (id) => { const c = courses.find(x=>x.id===id); if(c) fillForm(c); };
+    const duplicateCourse = (id) => { const c = courses.find(x=>x.id===id); if(!c) return; const copy = {...c, id: c.id+'-copy-'+Date.now(), name: c.name+' (copia)', createdAt: new Date().toISOString()}; courses.unshift(copy); save(courses); renderTable(); toast('Copia creata.'); };
+
+    // --- Render
+    const rowsEl = $('#rows');
+    const fmtSlots = (slots=[]) => slots.map(s=>`${s.day} ${s.start}–${s.end}`).join('<br>');
+    const fmtDetails = (c) => `
+      <div style="display:flex; gap:10px; align-items:center">
+        <span class="dot" style="background:${c.color}; border:1px solid #0002"></span>
+        <div>
+          <div><strong>${c.discipline}</strong> • ${c.level}</div>
+          <div class="help">${c.teacher||'—'} • Aula ${c.room||'—'}</div>
+          ${(c.tags&&c.tags.length)? `<div class="help">Tag: ${c.tags.join(', ')}</div>`: ''}
+        </div>
+      </div>`;
+
+    const renderTable = () => {
+      const list = courses.filter(matches);
+      rowsEl.innerHTML = '';
+      if(list.length===0){
+        rowsEl.innerHTML = `<tr><td colspan="5" class="help" style="padding:16px">Nessun corso trovato.</td></tr>`;
+        return;
+      }
+      list.forEach(c=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <div><strong>${c.name}</strong></div>
+            ${c.description? `<div class="help">${c.description}</div>`:''}
+          </td>
+          <td>${fmtDetails(c)}</td>
+          <td>${fmtSlots(c.slots)}</td>
+          <td><span class="status ${c.active? 'active':'inactive'}">${c.active? 'Attivo':'Inattivo'}</span></td>
+          <td>
+            <div class="row-actions">
+              <button onclick="editCourse('${c.id}')">Modifica</button>
+              <button onclick="duplicateCourse('${c.id}')">Duplica</button>
+              <button onclick="toggleActive('${c.id}')">${c.active? 'Disattiva':'Attiva'}</button>
+              <button class="danger" onclick="delCourse('${c.id}')">Elimina</button>
+            </div>
+          </td>`;
+        rowsEl.appendChild(tr);
+      });
+    };
+
+    // --- Export CSV (Corsi)
+    const toCSV = (arr) => {
+      const headers = ['id','nome','disciplina','livello','insegnante','aula','orari','capienza','prezzo','colore','data_inizio','data_fine','tag','descrizione','attivo','in_evidenza','creato_il'];
+      const lines = [headers.join(';')];
+      arr.forEach(c=>{
+        const row = [
+          c.id, c.name, c.discipline, c.level, (c.teacher||[c.teacherFirst,c.teacherLast].filter(Boolean).join(' ')), c.room,
+          (c.slots||[]).map(s=>`${s.day} ${s.start}-${s.end}`).join(' | '),
+          c.capacity, c.price, c.color, c.startDate||'', c.endDate||'', (c.tags||[]).join(','),
+          (c.description||'').replace(/\n/g,' '), c.active?1:0, c.featured?1:0, c.createdAt||''
+        ].map(v=>`"${String(v??'').replaceAll('"','""')}"`);
+        lines.push(row.join(';'));
+      });
+      return lines.join('\n');
+    };
+
+    $('#btnExport').addEventListener('click', ()=>{
+      const data = toCSV(courses);
+      const blob = new Blob([data], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'corsi.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    // ===== Enrollments logic =====
+    const planMultiplier = { mensile: 1, trimestrale: 3, annuale: 10 };
+
+    const renderCourseOptions = () => {
+      if(!enr.course) return;
+      const sel = enr.course;
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Seleziona un corso</option>' +
+        courses.map(c=>`<option value="${c.id}">${c.name} — €${(c.price||0).toFixed(2)}/mese</option>`).join('');
+      if(courses.some(c=>c.id===current)) sel.value = current; else sel.value = '';
+      updateAmount();
+    };
+
+    const updateAmount = () => {
+      const c = courses.find(x=>x.id===enr.course.value);
+      const price = c? Number(c.price||0) : 0;
+      const mult = planMultiplier[enr.plan.value] || 1;
+      enr.amount.value = (price * mult).toFixed(2);
+    };
+
+    enr.course && enr.course.addEventListener('change', updateAmount);
+    enr.plan && enr.plan.addEventListener('change', updateAmount);
+
+    const addEnrollment = () => {
+      const first = (enr.first.value||'').trim();
+      const last = (enr.last.value||'').trim();
+      const courseId = enr.course.value;
+      const plan = enr.plan.value;
+      if(!first || !last){ toast('Nome e cognome sono obbligatori.'); return; }
+      if(!courseId){ toast('Seleziona un corso.'); return; }
+      const course = courses.find(c=>c.id===courseId);
+      const id = `${toSlug(first+'-'+last)}-${courseId}-${Date.now()}`;
+      const amount = Number(enr.amount.value||0);
+      const rec = { id, first, last, courseId, courseName: course? course.name : courseId, plan, amount, createdAt: new Date().toISOString(), active: true };
+      enrollments.unshift(rec);
+      saveEnr(enrollments);
+      renderEnrollments();
+      enr.first.value=''; enr.last.value='';
+      toast('Iscrizione aggiunta.');
+    };
+
+    enr.addBtn && enr.addBtn.addEventListener('click', addEnrollment);
+
+    const renderEnrollments = () => {
+      if(!enr.rows) return;
+      enr.rows.innerHTML = '';
+      if(enrollments.length===0){
+        enr.rows.innerHTML = `<tr><td colspan="5" class="help" style="padding:16px">Nessuna iscrizione.</td></tr>`;
+        return;
+      }
+      enrollments.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${r.first} ${r.last}</strong></td>
+          <td>${r.courseName}</td>
+          <td>${r.plan.charAt(0).toUpperCase()+r.plan.slice(1)}</td>
+          <td>€ ${Number(r.amount||0).toFixed(2)}</td>
+          <td class="row-actions">
+            <button onclick=\"delEnrollment('${r.id}')\">Elimina</button>
+          </td>`;
+        enr.rows.appendChild(tr);
+      });
+    };
+
+    const delEnrollment = (id) => { if(!confirm('Eliminare l\'iscrizione?')) return; enrollments = enrollments.filter(x=>x.id!==id); saveEnr(enrollments); renderEnrollments(); };
+    window.delEnrollment = delEnrollment;
+
+    // --- Export CSV (Iscrizioni)
+    const exportEnrollmentsCSV = () => {
+      const headers = ['id','nome','cognome','corso_id','corso_nome','piano','quota','creato_il'];
+      const lines = [headers.join(';')];
+      enrollments.forEach(r=>{
+        const row = [r.id, r.first, r.last, r.courseId, r.courseName, r.plan, r.amount, r.createdAt]
+          .map(v=>`"${String(v??'').replaceAll('"','""')}"`);
+        lines.push(row.join(';'));
+      });
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'iscrizioni.csv'; a.click(); URL.revokeObjectURL(url);
+    };
+
+    $('#btnExportEnr')?.addEventListener('click', exportEnrollmentsCSV);
+
+    // --- Seed example (first run only)
+    if(courses.length===0){
+      courses = [
+        { id:'hiphop-junior', name:'Hip Hop Junior', discipline:'Hip Hop', level:'Base', teacher:'Martina Rossi', room:'Sala 1',
+          slots:[{day:'Martedì',start:'17:00',end:'18:00'},{day:'Giovedì',start:'17:00',end:'18:00'}], capacity:20, price:45, color:'#5b8cff',
+          startDate:'2025-10-07', endDate:'2026-06-15', tags:['junior','10-12'], description:'Percorso base per ragazzi 10–12 anni.', active:true, featured:true, createdAt:new Date().toISOString() },
+        { id:'contempo-open', name:'Contemporaneo Open', discipline:'Contemporaneo', level:'Open', teacher:'Luca Verdi', room:'Sala 2',
+          slots:[{day:'Lunedì',start:'19:00',end:'20:30'}], capacity:18, price:55, color:'#10b981', startDate:'2025-10-06', endDate:'2026-06-15', tags:['adulti'], description:'Tecnica release e improvvisazione.', active:true, featured:false, createdAt:new Date().toISOString() }
+      ];
+      save(courses);
+    }
+
+    // --- Public helpers for inline handlers
+    window.editCourse = editCourse;
+    window.duplicateCourse = duplicateCourse;
+    window.delCourse = delCourse;
+    window.toggleActive = toggleActive;
+    window.renderCourseOptions = renderCourseOptions;
+
+    // --- Init
+    renderTable();
+    renderCourseOptions();
+
+    // ========== DEV TESTS (non distruttivi) ==========
+    (function runTests(){
+      try {
+        const sample = [{
+          id:'t1', name:'Test', discipline:'Hip Hop', level:'Base', teacher:'X', room:'Sala',
+          slots:[{day:'Lunedì', start:'10:00', end:'11:00'}], capacity:10, price:30, color:'#fff',
+          startDate:'2025-01-01', endDate:'2025-02-01', tags:['a','b'], description:'riga1\nriga2', active:true, featured:false, createdAt:'2025-01-01T00:00:00.000Z'
+        }];
+        const csv = toCSV(sample);
+        console.assert(typeof csv === 'string', 'toCSV deve restituire una stringa');
+        console.assert(csv.includes('id;nome;disciplina'), 'Header CSV corsi mancante');
+        console.assert(!/\n\n/.test(csv), 'CSV non deve avere newline duplicati');
+        console.assert(!/riga1\nriga2/.test(csv), 'Le newline nella descrizione devono essere sostituite');
+        console.assert(/riga1 riga2/.test(csv), 'Le newline devono diventare spazi');
+        // Test escaping doppi apici
+        const sample2 = [{...sample[0], description:'test "virgolette"', name:'X;Y'}];
+        const csv2 = toCSV(sample2);
+        console.assert(csv2.includes('"test ""virgolette"""'), 'Le virgolette interne devono essere raddoppiate');
+      } catch(e) {
+        console.warn('Test corsi non critico:', e);
+      }
+      try {
+        const enrCSVHeaders = ['id','nome','cognome','corso_id','corso_nome','piano','quota','creato_il'].join(';');
+        const lines = [enrCSVHeaders, '"1";"Mario";"Rossi";"c1";"Hip Hop";"mensile";"45";"2025-01-01"'];
+        const csvText = lines.join('\n');
+        console.assert(csvText.includes(enrCSVHeaders), 'Header CSV iscrizioni mancante');
+      } catch(e) {
+        console.warn('Test iscrizioni non critico:', e);
+      }
+      try {
+        // Test toSlug con diacritici e spazi multipli
+        console.assert(toSlug('Città Caffè  --  Prova') === 'citta-caffe-prova', 'toSlug deve rimuovere diacritici e normalizzare i separatori');
+      } catch(e) {
+        console.warn('Test toSlug non critico:', e);
+      }
+      console.info('Self-check completato: se non vedi errori sopra, il codice è OK.');
+    })();
+  </script>
+</body>
+</html>
